@@ -59,4 +59,6 @@ It can encode images and texts in batches and calculate cosine similarities betw
     
     # Calculates cosine similarities
     similarity = text_features @ image_features.T # similarity[text_i, img_j]
-    ``` 
+    ```
+## Additional Notes
+* It takes some time (~0.9s for one image batch) to use the CLIP encoder initially, but subsequent uses are reasonably faster (~0.01s for one image batch).
