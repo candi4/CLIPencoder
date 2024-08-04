@@ -63,9 +63,12 @@ It can encode images and texts in batches and calculate cosine similarities betw
     similarity = text_features @ image_features.T # similarity[text_i, img_j]
     ```
 
+
+
 ### Goal-baseline regularization ([VLM-RM](https://sites.google.com/view/vlm-rm))
-In VLM-RM, they regularized cosine similarity by adding baseline description.
-$$ R_{\text{CLIP-Reg}}(s) = 1 - \frac{1}{2} \left\| \alpha \operatorname{proj}_{L} \mathbf{s} + (1 - \alpha) \mathbf{s} - \mathbf{g} \right\|_2^2 $$
+In VLM-RM, they regularized cosine similarity by adding baseline description.    
+
+$$R_{\text{CLIP-Reg}}(s) = 1 - \frac{1}{2} \left\|| \alpha \text{ proj}_{L} \mathbf{s} + (1 - \alpha) \mathbf{s} - \mathbf{g} \right\||_2^2$$    
 * $\mathbf{s}$ is the normalized vector obtained by encoding the image observation.
 * $\mathbf{g}$ is the normalized vector obtained by encoding the goal task description.    
 * $\mathbf{b}$ is the normalized vector obtained by encoding the baseline description.    
