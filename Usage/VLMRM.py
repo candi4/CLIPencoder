@@ -24,14 +24,12 @@ with torch.no_grad():
     goal_text = clip.tokenize(['win the game', 'navigate to the goal']).to(device)
     target:torch.Tensor = model.encode_text(goal_text)
     target /= target.norm(dim=-1, keepdim=True)
-    print(target.shape)
     target = target.mean(dim=0, keepdim=True)
     
     # b
     baseline_text = clip.tokenize(['maze', 'game', 'navigation']).to(device)
     baseline:torch.Tensor = model.encode_text(baseline_text)
     baseline /= baseline.norm(dim=-1, keepdim=True)
-    print(baseline.shape)
     baseline = baseline.mean(dim=0, keepdim=True)
 
 #
