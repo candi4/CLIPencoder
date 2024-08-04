@@ -29,7 +29,7 @@ How to use [CLIP](https://openai.com/index/clip/) encoder
 It can encode images and texts in batches and calculate cosine similarities between images and texts.
 1. Lists the names of available CLIP models and choose one
     ```
-    print(clip.available_models()) # <class 'list'>
+    clip.available_models() # <class 'list'>
     ```
 2. Loads CLIP encoder and preprocessor
     ```
@@ -66,9 +66,8 @@ It can encode images and texts in batches and calculate cosine similarities betw
 
 
 ### Goal-baseline regularization ([VLM-RM](https://sites.google.com/view/vlm-rm))
-In VLM-RM, they regularized cosine similarity by adding baseline description.    
-
-$$R_{\text{CLIP-Reg}}(s) = 1 - \frac{1}{2} \left\|| \alpha \text{ proj}_{L} \mathbf{s} + (1 - \alpha) \mathbf{s} - \mathbf{g} \right\||_2^2$$    
+In VLM-RM, they regularized cosine similarity by adding baseline description.
+$$R_{\text{CLIP-Reg}}(s) = 1 - \frac{1}{2} \lVert \alpha \text{ proj}_{L} \mathbf{s} + (1 - \alpha) \mathbf{s} - \mathbf{g} \rVert_2^2$$
 * $\mathbf{s}$ is the normalized vector obtained by encoding the image observation.
 * $\mathbf{g}$ is the normalized vector obtained by encoding the goal task description.    
 * $\mathbf{b}$ is the normalized vector obtained by encoding the baseline description.    
@@ -93,14 +92,12 @@ $$R_{\text{CLIP-Reg}}(s) = 1 - \frac{1}{2} \left\|| \alpha \text{ proj}_{L} \mat
     goal_text = clip.tokenize(['win the game', 'navigate to the goal']).to(device)
     target:torch.Tensor = model.encode_text(goal_text)
     target /= target.norm(dim=-1, keepdim=True)
-    print(target.shape)
     target = target.mean(dim=0, keepdim=True)
     
     # b
     baseline_text = clip.tokenize(['maze', 'game', 'navigation']).to(device)
     baseline:torch.Tensor = model.encode_text(baseline_text)
     baseline /= baseline.norm(dim=-1, keepdim=True)
-    print(baseline.shape)
     baseline = baseline.mean(dim=0, keepdim=True)
     ```
 3. Calculate reward
