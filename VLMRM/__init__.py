@@ -1,1 +1,1 @@
-from .VLMRM import VLMRM
+from .reward_model import CLIPReward

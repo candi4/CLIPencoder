@@ -1,8 +1,0 @@
-
-
-
-
-
-
-class VLMRM():
-    pass
