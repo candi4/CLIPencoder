@@ -117,4 +117,4 @@ $$R_{\text{CLIP-Reg}}(s) = 1 - \frac{1}{2} \lVert \alpha \text{ proj}_{L} \mathb
 
 
 ## Additional Notes
-* It takes some time (~0.9s for one image batch) to use the CLIP encoder initially, but subsequent uses are reasonably faster (~0.01s for one image batch).
+* It takes some time (~0.9s for one image) to use the CLIP encoder initially, but subsequent uses are reasonably faster (~0.01s for one image).
