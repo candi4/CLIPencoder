@@ -11,24 +11,34 @@ import clip
 from VLMRM.utils import get_device
 
 class CLIPEmbed(nn.Module):
-    def __init__(self, clip_model):
+    def __init__(self, clip_model_name, device:Union[th.device, str]='auto',):
         super().__init__()
-        self.clip_model = clip_model
-        if isinstance(clip_model.visual.image_size, int):
-            image_size = clip_model.visual.image_size
-        else:
-            image_size = clip_model.visual.image_size[0]
-        self.transform = image_transform(image_size)
-
+        self.clip_model_name = clip_model_name
+        self.device = device
+        self.model, self.preprocess = clip.load(self.clip_model_name, device=self.device)
+        
     @th.inference_mode()
-    def forward(self, x):
-        if x.shape[1] != 3:
-            x = x.permute(0, 3, 1, 2)
-
-        with th.no_grad(), th.autocast("cuda", enabled=th.cuda.is_available()):
-            x = self.transform(x)
-            x = self.clip_model.encode_image(x, normalize=True)
-        return x
+    def embed_images(self, images:list, normalize=True) -> th.Tensor:
+        assert isinstance(images[0], Image.Image), f'Given type: {type(images[0])}'
+        images = [self.preprocess(image) for image in images]
+        images = th.tensor(np.stack(images)).to(self.device)
+        vector:th.Tensor = self.model.encode_image(images).float()
+        if normalize:
+            vector /= vector.norm(dim=-1, keepdim=True)
+        return vector
+    
+    @th.inference_mode()
+    def embed_texts(self, texts:list, normalize=True, mean=True) -> th.Tensor:
+        assert isinstance(texts[0], str), f'Given type: {type(texts[0])}'
+        texts = clip.tokenize(texts).to(self.device)
+        vector:th.Tensor = self.model.encode_text(texts).float()
+        if normalize:
+            vector /= vector.norm(dim=-1, keepdim=True)
+        if mean:
+            vector = vector.mean(dim=0, keepdim=True)
+        return vector
+        
+    
 
 class CLIPReward(nn.Module):
     def __init__(self, clip_model_name:str, 
@@ -42,45 +52,41 @@ class CLIPReward(nn.Module):
         self.is_target_image = is_target_image
         self.is_baseline_image = is_baseline_image
         self.device = get_device(device)
+        
+        self.target = None
+        self.baseline = None
+        self.projection = None
 
         self.model, self.preprocess = clip.load(self.clip_model_name, device=self.device)
-    def set(self, alpha,
-            target=None,
+        self.clip_embed = CLIPEmbed(clip_model_name=self.clip_model_name, device=self.device)
+        
+    def set(self, alpha:float,
+            target_raw=None,
             *,
-            baseline=None,
+            baseline_raw=None,
             ):
+        if target_raw is not None:
+            self.target = self.clip_embed.embed_texts(texts=target_raw, normalize=True, mean=True)
+        if baseline_raw is not None:
+            self.baseline = self.clip_embed.embed_texts(texts=baseline_raw, normalize=True, mean=True)
         
-        # g
-        goal_text = clip.tokenize(['win the game', 'navigate to the goal']).to(self.device)
-        target:th.Tensor = self.model.encode_text(goal_text)
-        target /= target.norm(dim=-1, keepdim=True)
-        target = target.mean(dim=0, keepdim=True)
-        self.target = target
-        
-        # b
-        baseline_text = clip.tokenize(['maze', 'game', 'navigation']).to(self.device)
-        baseline:th.Tensor = self.model.encode_text(baseline_text)
-        baseline /= baseline.norm(dim=-1, keepdim=True)
-        baseline = baseline.mean(dim=0, keepdim=True)
-        self.baseline = baseline
-        
-        alpha = 0.5
-        direction = self.target - self.baseline
-        projection = direction.T @ direction / th.norm(direction) ** 2
-        identity = th.diag(th.ones(projection.shape[0])).to(projection.device)
-        self.projection = alpha * projection + (1 - alpha) * identity
-
+        assert not ((alpha != 0) and (self.baseline is None)), f"alpha={alpha}, self.baseline={self.baseline}"    
+            
+        if alpha == 0:
+            identity = th.diag(th.ones(projection.shape[0])).to(projection.device)
+            self.projection = identity
+        else:
+            direction = self.target - self.baseline
+            projection = direction.T @ direction / th.norm(direction) ** 2
+            identity = th.diag(th.ones(projection.shape[0])).to(projection.device)
+            self.projection = alpha * projection + (1 - alpha) * identity
 
     @th.inference_mode()
     def get_rewards(self, image_observations: list) -> th.Tensor:
-        # s
-        with th.no_grad():
-            s = time.time()
-            image_observations = [self.preprocess(image) for image in image_observations]
-            image_observation = th.tensor(np.stack(image_observations)).to(self.device)
-            state:th.Tensor = self.model.encode_image(image_observation)
-            state /= state.norm(dim=-1, keepdim=True)
-
-            reward = 1 - (th.norm((state - self.target) @ self.projection, dim=-1) ** 2) / 2
-            print(time.time()-s)
-            return reward
+        """
+        :param image_observations: list of PIL.Image.Image
+        """
+        state = self.clip_embed.embed_images(images=image_observations, normalize=True)
+        
+        reward = 1 - (th.norm((state - self.target) @ self.projection, dim=-1) ** 2) / 2
+        return reward

@@ -1,5 +1,7 @@
 from typing import Union
 import torch as th
+import numpy as np
+from PIL import Image
 
 def get_device(device: Union[th.device, str] = "auto") -> th.device:
     """
@@ -22,3 +24,8 @@ def get_device(device: Union[th.device, str] = "auto") -> th.device:
         return th.device("cpu")
 
     return device
+
+def numpy_to_pil(array:np.ndarray):
+    assert len(array.shape) in (2,3), f'array.shape={array.shape}'
+    image = Image.fromarray(array)
+    return image
