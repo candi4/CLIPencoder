@@ -1,4 +1,5 @@
+# For CLIP
 ftfy
 regex
 tqdm
-git+https://github.com/openai/CLIP.git
+clip @ git+https://github.com/openai/CLIP.git
