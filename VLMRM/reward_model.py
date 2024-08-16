@@ -18,20 +18,26 @@ class CLIPEmbed(nn.Module):
         self.model, self.preprocess = clip.load(self.clip_model_name, device=self.device)
         
     @th.inference_mode()
-    def embed_images(self, images:list, normalize=True) -> th.Tensor:
+    def embed_images(self, images:list) -> th.Tensor:
         assert isinstance(images[0], Image.Image), f'Given type: {type(images[0])}'
         images = [self.preprocess(image) for image in images]
         images = th.tensor(np.stack(images)).to(self.device)
         vector:th.Tensor = self.model.encode_image(images).float()
-        if normalize:
-            vector /= vector.norm(dim=-1, keepdim=True)
         return vector
     
     @th.inference_mode()
-    def embed_texts(self, texts:list, normalize=True, mean=True) -> th.Tensor:
+    def embed_texts(self, texts:list) -> th.Tensor:
         assert isinstance(texts[0], str), f'Given type: {type(texts[0])}'
         texts = clip.tokenize(texts).to(self.device)
         vector:th.Tensor = self.model.encode_text(texts).float()
+        return vector
+        
+    @th.inference_mode()
+    def embed(self, raw_data:list, *, is_image: bool, normalize=True, mean=False) -> th.Tensor:
+        if is_image:
+            vector = self.embed_images(images=raw_data)
+        else:
+            vector = self.embed_texts(texts=raw_data)
         if normalize:
             vector /= vector.norm(dim=-1, keepdim=True)
         if mean:
@@ -66,9 +72,11 @@ class CLIPReward(nn.Module):
             baseline_raw=None,
             ):
         if target_raw is not None:
-            self.target = self.clip_embed.embed_texts(texts=target_raw, normalize=True, mean=True)
+            self.target = self.clip_embed.embed(raw_data=target_raw, 
+                                                is_image=self.is_target_image, normalize=True, mean=True)
         if baseline_raw is not None:
-            self.baseline = self.clip_embed.embed_texts(texts=baseline_raw, normalize=True, mean=True)
+            self.baseline = self.clip_embed.embed(raw_data=baseline_raw,
+                                                  is_image=self.is_baseline_image, normalize=True, mean=True)
         
         assert not ((alpha != 0) and (self.baseline is None)), f"alpha={alpha}, self.baseline={self.baseline}"    
             
@@ -82,11 +90,13 @@ class CLIPReward(nn.Module):
             self.projection = alpha * projection + (1 - alpha) * identity
 
     @th.inference_mode()
-    def get_rewards(self, image_observations: list) -> th.Tensor:
+    def get_rewards(self, observations: list) -> th.Tensor:
         """
-        :param image_observations: list of PIL.Image.Image
+        :param observations: if image, list of PIL.Image.Image
+                             if text,  list of str
         """
-        state = self.clip_embed.embed_images(images=image_observations, normalize=True)
+        state = self.clip_embed.embed(raw_data=observations, is_image=self.is_state_image, normalize=True, mean=False)
+        
         
         reward = 1 - (th.norm((state - self.target) @ self.projection, dim=-1) ** 2) / 2
         return reward

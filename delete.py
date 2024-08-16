@@ -17,11 +17,12 @@ vlmrm.set(target_raw=['win the game', 'navigate to the goal'],
           baseline_raw=['maze', 'game', 'navigation'],
           alpha=0.5
           )
+image_observations=[Image.open(f"Usage/images/maze1.jpeg"),
+                    Image.open(f"Usage/images/maze2.jpeg"),
+                    ]
 for i in range(10):
     s = time.time()
-    rewards = vlmrm.get_rewards(image_observations=[Image.open(f"Usage/images/maze1.jpeg"),
-                                                    # Image.open(f"Usage/images/maze2.jpeg"),
-                                                    ])
+    rewards = vlmrm.get_rewards(observations=image_observations)
     
     print(rewards)
     print(time.time() - s)
