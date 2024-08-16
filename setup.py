@@ -1,0 +1,24 @@
+import os
+
+import pkg_resources
+from setuptools import setup, find_packages
+
+setup(
+    name="VLMRM",
+    py_modules=["VLMRM"],
+    version="1.0.0",
+    description="Use VLM-RM as a Python package.",
+    url="https://github.com/candi4/CLIPencoder.git",
+    author="candi4",
+    packages=find_packages(),
+    install_requires=[
+        str(r)
+        for r in pkg_resources.parse_requirements(
+            open(os.path.join(os.path.dirname(__file__), "requirements.txt"))
+        )
+    ],
+    include_package_data=False,
+    package_data={
+        'VLMRM': ['image/*'],
+    },
+)

@@ -2,6 +2,7 @@ from typing import Union
 import torch as th
 import numpy as np
 from PIL import Image
+import os
 
 def get_device(device: Union[th.device, str] = "auto") -> th.device:
     """
@@ -29,3 +30,20 @@ def numpy_to_pil(array:np.ndarray):
     assert len(array.shape) in (2,3), f'array.shape={array.shape}'
     image = Image.fromarray(array)
     return image
+
+### Directory
+
+def upper_directory(filename, step=0) -> str:
+    """ex. when step=0,
+    directory/filename.exe -> directory
+    dir1/dir2/ -> dir1/dir2
+    dir1/dir2 -> dir1
+    <SofaGuidewireNav>/SofaGW/utils.py -> <SofaGuidewireNav>/SofaGW
+    """
+    directory = os.path.dirname(filename)
+    for i in range(step):
+        directory = os.path.dirname(directory)
+    return directory
+
+# <VLMRM>
+root_dir = upper_directory(os.path.abspath(__file__), 0)

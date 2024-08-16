@@ -112,7 +112,10 @@ $$R_{\text{CLIP-Reg}}(s) = 1 - \frac{1}{2} \lVert \alpha \text{ proj}_{L} \mathb
     rewards = 1 - (torch.norm((state - target) @ projection, dim=-1) ** 2) / 2
     ```
 ## VLM-RM
-
+Use VLM-RM as a Python package
+```
+pip install git+https://github.com/candi4/CLIPencoder.git
+```
 
 
 

@@ -1,2 +1,7 @@
 __pycache__/
 *.py[cod]
+
+# For setup.py
+build/
+*.egg-info/
+*.egg
