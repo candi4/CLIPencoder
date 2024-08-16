@@ -3,10 +3,6 @@ from VLMRM import CLIPReward
 from PIL import Image
 import time
 
-print(type(CLIPReward))
-
-
-# model, preprocess = clip.load('ViT-B/16', device=device)
 
 vlmrm = CLIPReward(clip_model_name='ViT-B/16',
                    is_state_image=True, is_target_image=False, is_baseline_image=False,
