@@ -81,7 +81,7 @@ class CLIPReward(nn.Module):
         assert not ((alpha != 0) and (self.baseline is None)), f"alpha={alpha}, self.baseline={self.baseline}"    
             
         if alpha == 0:
-            identity = th.diag(th.ones(projection.shape[0])).to(projection.device)
+            identity = th.diag(th.ones(self.target.shape[0])).to(self.target.device)
             self.projection = identity
         else:
             direction = self.target - self.baseline
