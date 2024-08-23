@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 setup(
     name="VLMRM",
     py_modules=["VLMRM"],
-    version="1.0.0",
+    version="1.0.1",
     description="Use VLM-RM as a Python package.",
     url="https://github.com/candi4/CLIPencoder.git",
     author="candi4",
